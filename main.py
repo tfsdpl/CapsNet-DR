@@ -16,47 +16,22 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
-    # Load model
     model = CapsNet().to(device)
     criterion = CapsuleLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 
-    # Load data
-    transform = transforms.Compose([
-        # shift by 2 pixels in either direction with zero padding.
-        transforms.RandomCrop(28, padding=2),
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
-    DATA_PATH = './data'
+
     BATCH_SIZE = 128
-    # train_loader = DataLoader(
-    #     dataset=MNIST(root=DATA_PATH, download=True, train=True, transform=transform),
-    #     batch_size=BATCH_SIZE,
-    #     num_workers=4,
-    #     shuffle=True)
-    # test_loader = DataLoader(
-    #     dataset=MNIST(root=DATA_PATH, download=True, train=False, transform=transform),
-    #     batch_size=BATCH_SIZE,
-    #     num_workers=4,
-    #     shuffle=True)
-    #
-    # # transform = transforms.Compose([
-    # #     transforms.Resize((128, 128)),
-    # #     transforms.Grayscale(num_output_channels=3),
-    # #     transforms.ToTensor(),
-    # # ])
 
     transform = transforms.Compose([
-        # shift by 2 pixels in either direction with zero padding.
-        transforms.RandomCrop(28, padding=2),
+        transforms.Resize((28, 28)),
         transforms.ToTensor(),
+        transforms.Grayscale(num_output_channels=3),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
 
     dataset = DRDataset(csv_file='datasets/idrid/test.csv', root_dir='pre_processing/datasets/idrid/test', transform=transform)
-   # dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     total_size = len(dataset)
     train_size = int(0.8 * total_size)
     test_size = total_size - train_size
