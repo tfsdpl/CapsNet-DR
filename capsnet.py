@@ -126,10 +126,10 @@ class CapsNet(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(16 * 10, 512),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.25),
+            nn.Dropout(0.2),
             nn.Linear(512, 1024),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.25),
+            nn.Dropout(0.2),
             nn.Linear(1024, 128 * 128),
             nn.Sigmoid())
 

@@ -19,8 +19,8 @@ def main():
     model = CapsNet().to(device)
     criterion = CapsuleLoss()
     #optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
+    optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-6)
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.05)
 
     BATCH_SIZE = 6
 
@@ -60,8 +60,7 @@ def main():
 
             # Compute loss & accuracy
             loss = criterion(images, labels, logits, reconstruction)
-            correct += torch.sum(
-                torch.argmax(logits, dim=1) == torch.argmax(labels, dim=1)).item()
+            correct += torch.sum(  torch.argmax(logits, dim=1) == torch.argmax(labels, dim=1)).item()
             total += len(labels)
             accuracy = correct / total
             total_loss += loss
