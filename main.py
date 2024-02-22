@@ -5,6 +5,7 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from capsnet import CapsNet, CapsuleLoss
 from torch.utils.data import DataLoader, random_split
+from torch.optim.lr_scheduler import StepLR
 
 import pre_processing
 from datasets import DRDataset
@@ -20,7 +21,8 @@ def main():
     criterion = CapsuleLoss()
     #optimizer = optim.Adam(model.parameters(), lr=1e-3)
     optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-6)
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.05)
+    #scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.05)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.95)
 
     BATCH_SIZE = 6
 
