@@ -4,6 +4,12 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from capsnet import CapsNet, CapsuleLoss
+from torch.utils.data import DataLoader, random_split
+
+import pre_processing
+from datasets import DRDataset
+
+
 
 # Check cuda availability
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -25,16 +31,38 @@ def main():
     ])
     DATA_PATH = './data'
     BATCH_SIZE = 128
-    train_loader = DataLoader(
-        dataset=MNIST(root=DATA_PATH, download=True, train=True, transform=transform),
-        batch_size=BATCH_SIZE,
-        num_workers=4,
-        shuffle=True)
-    test_loader = DataLoader(
-        dataset=MNIST(root=DATA_PATH, download=True, train=False, transform=transform),
-        batch_size=BATCH_SIZE,
-        num_workers=4,
-        shuffle=True)
+    # train_loader = DataLoader(
+    #     dataset=MNIST(root=DATA_PATH, download=True, train=True, transform=transform),
+    #     batch_size=BATCH_SIZE,
+    #     num_workers=4,
+    #     shuffle=True)
+    # test_loader = DataLoader(
+    #     dataset=MNIST(root=DATA_PATH, download=True, train=False, transform=transform),
+    #     batch_size=BATCH_SIZE,
+    #     num_workers=4,
+    #     shuffle=True)
+    #
+    # # transform = transforms.Compose([
+    # #     transforms.Resize((128, 128)),
+    # #     transforms.Grayscale(num_output_channels=3),
+    # #     transforms.ToTensor(),
+    # # ])
+
+    transform = transforms.Compose([
+        # shift by 2 pixels in either direction with zero padding.
+        transforms.RandomCrop(28, padding=2),
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+    dataset = DRDataset(csv_file='datasets/idrid/test.csv', root_dir='pre_processing/datasets/idrid/test', transform=transform)
+   # dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+    total_size = len(dataset)
+    train_size = int(0.8 * total_size)
+    test_size = total_size - train_size
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
     # Train
     EPOCHES = 50
@@ -85,3 +113,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    #pre_processing.run()

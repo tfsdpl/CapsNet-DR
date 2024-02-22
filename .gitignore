@@ -3,3 +3,8 @@
 data/
 model/
 *pyc
+*.png
+*.jpg
+*.jpeg
+datasets/
+venv/
