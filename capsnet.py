@@ -108,15 +108,15 @@ class CapsNet(nn.Module):
         self.conv = nn.Conv2d(1, 256, 9)
         self.relu = nn.ReLU(inplace=True)
 
-
         self.primary_caps = PrimaryCaps(num_conv_units=32,
                                         in_channels=256,
-                                        out_channels=8,
+                                        out_channels=1,
                                         kernel_size=9,
                                         stride=2)
 
 
-        self.digit_caps = DigitCaps(in_dim=8,
+
+        self.digit_caps = DigitCaps(in_dim=1,
                                     in_caps=32 * 56 * 56,
                                     out_caps=10,
                                     out_dim=16,
@@ -126,8 +126,10 @@ class CapsNet(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(16 * 10, 512),
             nn.ReLU(inplace=True),
+            nn.Dropout(0.25),
             nn.Linear(512, 1024),
             nn.ReLU(inplace=True),
+            nn.Dropout(0.25),
             nn.Linear(1024, 128 * 128),
             nn.Sigmoid())
 

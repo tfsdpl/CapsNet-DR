@@ -18,11 +18,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def main():
     model = CapsNet().to(device)
     criterion = CapsuleLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
-
+    #optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
 
     BATCH_SIZE = 6
+
+    # transform = transforms.Compose([
+    #     transforms.Resize((128, 128)),
+    #     transforms.ToTensor(),
+    #     transforms.Grayscale(num_output_channels=3),
+    #     transforms.Normalize((0.1307,), (0.3081,))
+    # ])
 
     transform = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -58,8 +65,11 @@ def main():
             total += len(labels)
             accuracy = correct / total
             total_loss += loss
+
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
             print('Epoch {}, batch {}, loss: {}, accuracy: {}'.format(ep + 1,
                                                                       batch_id,
                                                                       total_loss / batch_id,

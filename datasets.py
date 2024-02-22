@@ -26,10 +26,22 @@ class DRDataset(Dataset):
         image = Image.open(img_name)
         label = self.frame.iloc[idx, 1]
 
+        label = 0 if label == 0 else 1
+
         if self.transform:
             image = self.transform(image)
 
         return image, label
+
+    # def __getitem__(self, idx):
+    #     img_name = os.path.join(self.root_dir, self.frame.iloc[idx, 0])
+    #     image = Image.open(img_name)
+    #     label = self.frame.iloc[idx, 1]
+    #
+    #     if self.transform:
+    #         image = self.transform(image)
+    #
+    #     return image, label
 
 
 
