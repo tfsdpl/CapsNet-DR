@@ -22,17 +22,16 @@ def main():
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 
 
-    BATCH_SIZE = 20
+    BATCH_SIZE = 6
 
     transform = transforms.Compose([
-        #transforms.Resize((28, 28)),
         transforms.Resize((128, 128)),
         transforms.ToTensor(),
         transforms.Grayscale(num_output_channels=3),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
 
-    dataset = DRDataset(csv_file='datasets/idrid/test.csv', root_dir='pre_processing/datasets/idrid/test', transform=transform)
+    dataset = DRDataset(csv_file='datasets/APTOS/train.csv', root_dir='pre_processing/datasets/APTOS/train', transform=transform)
     total_size = len(dataset)
     train_size = int(0.8 * total_size)
     test_size = total_size - train_size
@@ -66,19 +65,18 @@ def main():
                                                                       total_loss / batch_id,
                                                                       accuracy))
             batch_id += 1
-        scheduler.step(ep)
+        scheduler.step()
         print('Total loss for epoch {}: {}'.format(ep + 1, total_loss))
 
     # Eval
     model.eval()
     correct, total = 0, 0
     for images, labels in test_loader:
-        # Add channels = 1
         images = images.to(device)
-        # Categogrical encoding
         labels = torch.eye(10).index_select(dim=0, index=labels).to(device)
         logits, reconstructions = model(images)
         pred_labels = torch.argmax(logits, dim=1)
+        print('pred_labels', pred_labels)
         correct += torch.sum(pred_labels == torch.argmax(labels, dim=1)).item()
         total += len(labels)
     print('Accuracy: {}'.format(correct / total))

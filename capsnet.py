@@ -64,8 +64,8 @@ class DigitCaps(nn.Module):
         # W @ x =
         # (1, out_caps, in_caps, out_dim, in_dim) @ (batch_size, 1, in_caps, in_dim, 1) =
         # (batch_size, out_caps, in_caps, out_dims, 1)
-        print('self.W', self.W.shape)
-        print('x', x.shape)
+        # print('self.W', self.W.shape)
+        # print('x', x.shape)
         u_hat = torch.matmul(self.W, x)
         # (batch_size, out_caps, in_caps, out_dim)
         u_hat = u_hat.squeeze(-1)
