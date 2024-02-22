@@ -22,10 +22,11 @@ def main():
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 
 
-    BATCH_SIZE = 128
+    BATCH_SIZE = 20
 
     transform = transforms.Compose([
-        transforms.Resize((28, 28)),
+        #transforms.Resize((28, 28)),
+        transforms.Resize((128, 128)),
         transforms.ToTensor(),
         transforms.Grayscale(num_output_channels=3),
         transforms.Normalize((0.1307,), (0.3081,))

@@ -64,6 +64,8 @@ class DigitCaps(nn.Module):
         # W @ x =
         # (1, out_caps, in_caps, out_dim, in_dim) @ (batch_size, 1, in_caps, in_dim, 1) =
         # (batch_size, out_caps, in_caps, out_dims, 1)
+        print('self.W', self.W.shape)
+        print('x', x.shape)
         u_hat = torch.matmul(self.W, x)
         # (batch_size, out_caps, in_caps, out_dim)
         u_hat = u_hat.squeeze(-1)
@@ -99,36 +101,34 @@ class DigitCaps(nn.Module):
 
 
 class CapsNet(nn.Module):
-    """Basic implementation of capsule network layer."""
-
     def __init__(self):
         super(CapsNet, self).__init__()
 
-        # Conv2d layer
+        # Ajuste na camada convolucional para manter a mesma
         self.conv = nn.Conv2d(1, 256, 9)
         self.relu = nn.ReLU(inplace=True)
 
-        # Primary capsule
+
         self.primary_caps = PrimaryCaps(num_conv_units=32,
                                         in_channels=256,
                                         out_channels=8,
                                         kernel_size=9,
                                         stride=2)
 
-        # Digit capsule
+
         self.digit_caps = DigitCaps(in_dim=8,
-                                    in_caps=32 * 6 * 6,
+                                    in_caps=32 * 56 * 56,
                                     out_caps=10,
                                     out_dim=16,
                                     num_routing=3)
 
-        # Reconstruction layer
+
         self.decoder = nn.Sequential(
             nn.Linear(16 * 10, 512),
             nn.ReLU(inplace=True),
             nn.Linear(512, 1024),
             nn.ReLU(inplace=True),
-            nn.Linear(1024, 784),
+            nn.Linear(1024, 128 * 128),
             nn.Sigmoid())
 
     def forward(self, x):
