@@ -8,40 +8,21 @@ from torch.utils.data import DataLoader, random_split
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
 
-import pre_processing
 from datasets import DRDataset
+
+
 writer = SummaryWriter('runs/experimento_1')
-
-
-
-# Check cuda availability
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+
 def main():
+    LR = 0.00001
     model = CapsNet().to(device)
     criterion = CapsuleLoss()
-    # 0.88
-    # #optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    # optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-8)
-    # #scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.05)
-    # scheduler = StepLR(optimizer, step_size=1, gamma=0.01)
-
-
-    #optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    optimizer = optim.Adam(model.parameters(), lr=0.0000001, weight_decay=1e-12)
-    #scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.05)
-    scheduler = StepLR(optimizer, step_size=1, gamma=0.01)
-
+    optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=LR)
+    scheduler = StepLR(optimizer, step_size=1, gamma=LR)
     BATCH_SIZE = 6
-
-    # transform = transforms.Compose([
-    #     transforms.Resize((128, 128)),
-    #     transforms.ToTensor(),
-    #     transforms.Grayscale(num_output_channels=3),
-    #     transforms.Normalize((0.1307,), (0.3081,))
-    # ])
-
     transform = transforms.Compose([
         transforms.Resize((128, 128)),
         transforms.ToTensor(),
@@ -87,6 +68,11 @@ def main():
                                                                           total_loss / batch_id,
                                                                           accuracy))
             batch_id += 1
+
+        LR = LR-0.000005
+
+        optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=LR)
+        scheduler = StepLR(optimizer, step_size=1, gamma=LR)
         scheduler.step()
         writer.add_scalar('Loss/epoch', total_loss / len(train_loader), ep)
         writer.add_scalar('Accuracy/epoch', correct / total, ep)
@@ -106,6 +92,7 @@ def main():
 
     # Save model
     torch.save(model.state_dict(), './model/capsnet_ep{}_acc{}.pt'.format(EPOCHES, correct / total))
+
 
 
 if __name__ == '__main__':
