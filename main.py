@@ -88,10 +88,11 @@ def main():
                                                                           accuracy))
             batch_id += 1
         if ep >= 22:
+            #LR = 0.000005
             LR = 0.00001
 
         if ep >= 30:
-            LR = 0.00005
+            LR = 0.0001
 
         optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=LR)
         writer.add_scalar('Loss/epoch', total_loss / len(train_loader), ep)
