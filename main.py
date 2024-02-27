@@ -1,27 +1,46 @@
-import torch
 from torch import optim
-from torch.utils.data import DataLoader
-from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from capsnet import CapsNet, CapsuleLoss
 from torch.utils.data import DataLoader, random_split
-from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
-
 from datasets import DRDataset
+import torch
+import numpy as np
+import random
+import os
+import random
 
 
-writer = SummaryWriter('runs/experimento_1')
+seed = 42
+seed_np = np.random.randint(seed)
+random.seed(seed_np)
+np.random.seed(seed_np)
+
+torch.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
+
+# Se você estiver usando CUDA com PyTorch
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
+# Para ambientes que utilizam multi-threading
+os.environ['PYTHONHASHSEED'] = str(seed)
+
+#tensorboard --logdir=runs
+writer = SummaryWriter('runs/experimento_6')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 
 def main():
-    LR = 0.00001
+    LR = 0.000005
+    WD =  0.000001
     model = CapsNet().to(device)
     criterion = CapsuleLoss()
-    optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=LR)
-    scheduler = StepLR(optimizer, step_size=1, gamma=LR)
+    optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
     BATCH_SIZE = 6
     transform = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -68,12 +87,13 @@ def main():
                                                                           total_loss / batch_id,
                                                                           accuracy))
             batch_id += 1
+        if ep >= 22:
+            LR = 0.00001
 
-        LR = LR-0.000005
+        if ep >= 30:
+            LR = 0.00005
 
         optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=LR)
-        scheduler = StepLR(optimizer, step_size=1, gamma=LR)
-        scheduler.step()
         writer.add_scalar('Loss/epoch', total_loss / len(train_loader), ep)
         writer.add_scalar('Accuracy/epoch', correct / total, ep)
         print('Total loss for epoch {}: {}'.format(ep + 1, total_loss))
