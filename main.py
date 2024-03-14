@@ -36,15 +36,19 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
-    valor = 0.000001
+    valor = 0
     for i in range(50):
+        if i <=4:
+            valor = valor + 0.000001
+            continue
         LR = 0.000005
-        WD =  0.000005
+        WD = 0.000005
+        #writer = SummaryWriter(f'runs/experimento_{i}')
         writer = SummaryWriter(f'runs/experimento_{i}')
         model = CapsNet().to(device)
         criterion = CapsuleLoss()
         optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
-        BATCH_SIZE = 6
+        BATCH_SIZE = 15
         transform = transforms.Compose([
             transforms.Resize((128, 128)),
             transforms.ToTensor(),
@@ -61,7 +65,7 @@ def main():
         test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
         # Train
-        EPOCHES = 50
+        EPOCHES = 100
         model.train()
         for ep in range(EPOCHES):
             batch_id = 1
@@ -90,17 +94,24 @@ def main():
                                                                               total_loss / batch_id,
                                                                               accuracy))
                 batch_id += 1
-            if ep == 20:
-                LR =  LR+valor
+            if ep == 10:
+                LR = 0.000001+valor
+                optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
 
+            if ep == 20:
+                LR = 0.0000005+valor
+                optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+
+            if ep == 30:
+                LR = 0.000001+valor
                 optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
 
 
             writer.add_scalar('Loss/epoch', total_loss / len(train_loader), ep)
             writer.add_scalar('Accuracy/epoch', correct / total, ep)
             print('Total loss for epoch {}: {}'.format(ep + 1, total_loss))
-            if correct / total >= 0.5:
-                break
+            # if correct / total >= 0.5:
+            #     break
 
         # Eval
         model.eval()
@@ -115,9 +126,9 @@ def main():
         print('Accuracy: {}'.format(correct / total))
 
         # Save model
-        torch.save(model.state_dict(), './model/capsnet_ep{}_acc{}_wd{}_lr{}.pt'.format(EPOCHES, correct / total, WD, LR))
-        valor += 0.000001
+        torch.save(model.state_dict(), './model/capsnet_ep{}_bs{}_acc{}_wd{}_lr{}.pt'.format(EPOCHES, BATCH_SIZE, correct / total, WD, LR))
 
+        valor = valor+0.000001
 
 if __name__ == '__main__':
     main()
