@@ -36,99 +36,123 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
+    #valor = 0
+
+    i = '01'
     valor = 0
-    for i in range(50):
-        if i <=4:
-            valor = valor + 0.000001
-            continue
-        LR = 0.000005
-        WD = 0.000005
-        #writer = SummaryWriter(f'runs/experimento_{i}')
-        writer = SummaryWriter(f'runs/experimento_{i}')
-        model = CapsNet().to(device)
-        criterion = CapsuleLoss()
-        optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
-        BATCH_SIZE = 15
-        transform = transforms.Compose([
-            transforms.Resize((128, 128)),
-            transforms.ToTensor(),
-            transforms.Grayscale(num_output_channels=3),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
 
-        dataset = DRDataset(csv_file='datasets/APTOS/train.csv', root_dir='pre_processing/datasets/APTOS/train', transform=transform)
-        total_size = len(dataset)
-        train_size = int(0.8 * total_size)
-        test_size = total_size - train_size
-        train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-        train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    LR = 0.000005
+    WD = 0.000005
+    #writer = SummaryWriter(f'runs/experimento_{i}')
+    writer = SummaryWriter(f'runs/experimento_10_to_10_{i}')
+    model = CapsNet().to(device)
+    criterion = CapsuleLoss()
+    optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+    BATCH_SIZE = 15
+    transform = transforms.Compose([
+        transforms.Resize((128, 128)),
+        transforms.ToTensor(),
+        transforms.Grayscale(num_output_channels=3),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
-        # Train
-        EPOCHES = 100
-        model.train()
-        for ep in range(EPOCHES):
-            batch_id = 1
-            correct, total, total_loss = 0, 0, 0.
-            for images, labels in train_loader:
-                optimizer.zero_grad()
-                images = images.to(device)
-                labels = torch.eye(10).index_select(dim=0, index=labels).to(device)
-                logits, reconstruction = model(images)
+    dataset = DRDataset(csv_file='datasets/APTOS/train.csv', root_dir='pre_processing/datasets/APTOS/train', transform=transform)
+    total_size = len(dataset)
+    train_size = int(0.8 * total_size)
+    test_size = total_size - train_size
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-                # Compute loss & accuracy
-                loss = criterion(images, labels, logits, reconstruction)
-                correct += torch.sum(  torch.argmax(logits, dim=1) == torch.argmax(labels, dim=1)).item()
-                total += len(labels)
-                accuracy = correct / total
-                total_loss += loss
+    # Train
+    EPOCHES = 50
+    model.train()
+    for ep in range(EPOCHES):
+        batch_id = 1
+        correct, total, total_loss = 0, 0, 0.
+        for images, labels in train_loader:
+            optimizer.zero_grad()
+            images = images.to(device)
+            labels = torch.eye(10).index_select(dim=0, index=labels).to(device)
+            logits, reconstruction = model(images)
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                writer.add_scalar('Loss/train', loss.item(), ep * len(train_loader) + batch_id)
-                writer.add_scalar('Accuracy/train', accuracy, ep * len(train_loader) + batch_id)
+            # Compute loss & accuracy
+            loss = criterion(images, labels, logits, reconstruction)
+            correct += torch.sum(  torch.argmax(logits, dim=1) == torch.argmax(labels, dim=1)).item()
+            total += len(labels)
+            accuracy = correct / total
+            total_loss += loss
 
-                print('Epoch {}, batch {}, loss: {}, accuracy: {}'.format(ep + 1,
-                                                                              batch_id,
-                                                                              total_loss / batch_id,
-                                                                              accuracy))
-                batch_id += 1
-            if ep == 10:
-                LR = 0.000001+valor
-                optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            writer.add_scalar('Loss/train', loss.item(), ep * len(train_loader) + batch_id)
+            writer.add_scalar('Accuracy/train', accuracy, ep * len(train_loader) + batch_id)
 
-            if ep == 20:
-                LR = 0.0000005+valor
-                optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+            print('Epoch {}, batch {}, loss: {}, accuracy: {}'.format(ep + 1,
+                                                                          batch_id,
+                                                                          total_loss / batch_id,
+                                                                          accuracy))
+            batch_id += 1
+        if ep == 10:
+            print('10 update LR')
+            LR = 0.000001
+            optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
 
-            if ep == 30:
-                LR = 0.000001+valor
-                optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        if ep == 20:
+            print('20 update LR')
+            LR = 0.0000005
+            optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+
+        # if ep == 30:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        #
+        # if ep == 40:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        #
+        # if ep == 50:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        #
+        # if ep == 60:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        #
+        # if ep == 70:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        #
+        # if ep == 80:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
+        #
+        # if ep == 90:
+        #     LR = 0.000001
+        #     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
 
 
-            writer.add_scalar('Loss/epoch', total_loss / len(train_loader), ep)
-            writer.add_scalar('Accuracy/epoch', correct / total, ep)
-            print('Total loss for epoch {}: {}'.format(ep + 1, total_loss))
+        writer.add_scalar('Loss/epoch', total_loss / len(train_loader), ep)
+        writer.add_scalar('Accuracy/epoch', correct / total, ep)
+        print('Total loss for epoch {}: {}'.format(ep + 1, total_loss))
             # if correct / total >= 0.5:
             #     break
 
         # Eval
-        model.eval()
-        correct, total = 0, 0
-        for images, labels in test_loader:
-            images = images.to(device)
-            labels = torch.eye(10).index_select(dim=0, index=labels).to(device)
-            logits, reconstructions = model(images)
-            pred_labels = torch.argmax(logits, dim=1)
-            correct += torch.sum(pred_labels == torch.argmax(labels, dim=1)).item()
-            total += len(labels)
-        print('Accuracy: {}'.format(correct / total))
+    model.eval()
+    correct, total = 0, 0
+    for images, labels in test_loader:
+        images = images.to(device)
+        labels = torch.eye(10).index_select(dim=0, index=labels).to(device)
+        logits, reconstructions = model(images)
+        pred_labels = torch.argmax(logits, dim=1)
+        correct += torch.sum(pred_labels == torch.argmax(labels, dim=1)).item()
+        total += len(labels)
+    print('Accuracy: {}'.format(correct / total))
+    torch.save(model.state_dict(), './model/capsnet_ep{}_bs{}_acc{}_wd{}_lr{}.pt'.format(EPOCHES, BATCH_SIZE, correct / total, WD, LR))
 
-        # Save model
-        torch.save(model.state_dict(), './model/capsnet_ep{}_bs{}_acc{}_wd{}_lr{}.pt'.format(EPOCHES, BATCH_SIZE, correct / total, WD, LR))
-
-        valor = valor+0.000001
+        #valor = valor+0.000001
 
 if __name__ == '__main__':
     main()
